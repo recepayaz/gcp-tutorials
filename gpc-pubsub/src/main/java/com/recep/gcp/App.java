@@ -40,13 +40,23 @@ public class App {
 			while (true) {
 				List<String> messages = senseorGenerator.generateSensorData();
 				logger.info("Number of {} message generated..", messages.size());
-				publisher.sendMessages(messages);
+
 				try {
-					Thread.sleep(r.nextInt(500));
+					int i = r.nextInt(20);
+					if(i == 7) {
+						logger.info("Going for a long sleep");
+						Thread.sleep(2000);
+					} else {
+						Thread.sleep(r.nextInt(800));	
+					}
+					
 				} catch (InterruptedException e) {
 					logger.error(e);
 					e.printStackTrace();
 				}
+				
+				publisher.sendMessages(messages);
+
 			}
 		} finally {
 			logger.error("Bye bye bye.....");
