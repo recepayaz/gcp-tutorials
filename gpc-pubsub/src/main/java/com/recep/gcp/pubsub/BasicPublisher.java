@@ -7,36 +7,54 @@ import com.google.cloud.pubsub.v1.Publisher;
 import com.google.protobuf.ByteString;
 import com.google.pubsub.v1.ProjectTopicName;
 import com.google.pubsub.v1.PubsubMessage;
+import com.recep.gcp.App;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class BasicPublisher {
-
+	public Publisher publisher = null;
+	public String topicId;
 	// use the default project id
 	private static final String PROJECT_ID = ServiceOptions.getDefaultProjectId();
 
-	/**
-	 * Publish messages to a topic.
-	 * 
-	 * @param args topic name, number of messages
-	 */
-	public static void main(String... args) throws Exception {
-		// topic id, eg. "my-topic"
-		String topicId = args[0];
-		int messageCount = Integer.parseInt(args[1]);
-		ProjectTopicName topicName = ProjectTopicName.of(PROJECT_ID, topicId);
-		Publisher publisher = null;
-		List<ApiFuture<String>> futures = new ArrayList<ApiFuture<String>>();
+	private static final Logger logger = LogManager.getLogger(BasicPublisher.class);
 
-		try {
+	public BasicPublisher(String topicId) {
+		super();
+		this.topicId = topicId;
+	}
+
+	private void init() throws IOException {
+		if (publisher == null) {
+			ProjectTopicName topicName = ProjectTopicName.of(PROJECT_ID, topicId);
 			// Create a publisher instance with default settings bound to the topic
 			publisher = Publisher.newBuilder(topicName).build();
+			logger.info("Building new publisher....................");
+		}
+	}
 
-			for (int i = 0; i < messageCount; i++) {
-				String message = "message-" + i;
+	public void shutdown() {
+		if (publisher != null) {
+			// When finished with the publisher, shutdown to free up resources.
+			logger.info("Shutting down....");
 
+			publisher.shutdown();
+		}
+	}
+
+	public void sendMessages(List<String> messages) throws InterruptedException, ExecutionException, IOException {
+
+		init();
+		List<ApiFuture<String>> futures = new ArrayList<ApiFuture<String>>();
+		try {
+			for (String message : messages) {
 				// convert message to bytes
 				ByteString data = ByteString.copyFromUtf8(message);
 				PubsubMessage pubsubMessage = PubsubMessage.newBuilder().setData(data).build();
@@ -45,18 +63,13 @@ public class BasicPublisher {
 				ApiFuture<String> future = publisher.publish(pubsubMessage);
 				futures.add(future);
 			}
+			logger.info("{} numberof messages are sent", messages.size());
 		} finally {
 			// Wait on any pending requests
 			List<String> messageIds = ApiFutures.allAsList(futures).get();
-
-			for (String messageId : messageIds) {
-				System.out.println(messageId);
-			}
-
-			if (publisher != null) {
-				// When finished with the publisher, shutdown to free up resources.
-				publisher.shutdown();
-			}
+			messageIds.forEach(logger::info);
 		}
+
 	}
+
 }
