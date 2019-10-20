@@ -36,23 +36,37 @@ public class App {
 		OysterSensorGenerator senseorGenerator = new OysterSensorGenerator(stations);
 
 		BasicPublisher publisher = new BasicPublisher(topicId);
+		List<String> delayQueue = new ArrayList<String>();
+		int delayQueueCycle =0;
 		try {
 			while (true) {
 				List<String> messages = senseorGenerator.generateSensorData();
-				logger.info("Number of {} message generated..", messages.size());
+				logger.info("Number of {} message generated.. DelayQueue Cycle :{}. DelayQueue Size : {}.", messages.size(), delayQueueCycle, delayQueue.size());
 
 				try {
 					int i = r.nextInt(20);
-					if(i == 7) {
+					if (i == 7) {
 						logger.info("Going for a long sleep");
 						Thread.sleep(2000);
-					} else {
-						Thread.sleep(r.nextInt(800));	
+					} else if ( i > 18) {  //delay queue
+						logger.info("Entering DelayQueue. {} Number of messages goes into delayQueue.." , messages.size());
+						delayQueue.addAll(messages);
+						delayQueueCycle++;
+					} else { //sleep
+						Thread.sleep(r.nextInt(1000));
 					}
-					
+
 				} catch (InterruptedException e) {
 					logger.error(e);
 					e.printStackTrace();
+				}
+				
+				if(delayQueueCycle > 4) {
+					logger.info("Flushing delayQueue. Cycle is {}. Size of delayQueue is  {}.",delayQueueCycle, delayQueue.size());
+					publisher.sendMessages(delayQueue);
+					delayQueue.clear();
+					delayQueueCycle=0;
+					logger.info("delayQueue are flushed.Size of delayQueue is  {}.", delayQueue.size());
 				}
 				
 				publisher.sendMessages(messages);
