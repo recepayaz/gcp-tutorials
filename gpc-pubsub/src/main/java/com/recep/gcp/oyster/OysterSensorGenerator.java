@@ -49,6 +49,7 @@ public class OysterSensorGenerator {
 		data.append(pickRandomGate(station.numberOfGate)).append(",");
 		data.append(generateOysterNo()).append(",");
 		data.append(random.nextInt(2));
+		data.append(",").append(LocalDateTime.now().toString());
 		return data.toString();
 	}
 
