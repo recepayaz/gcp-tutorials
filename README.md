@@ -16,3 +16,5 @@ create PubSub Topic :  gcloud pubsub topics create my-topic
  :mvn exec:java -Dexec.mainClass=com.recep.gcp.App -Dexec.args="my-topic"
  
 
+## To Start DataFlow Pipeline
+ mvn -Pdataflow-runner compile exec:java -Dexec.mainClass=com.recep.gcp.StarterPipeline -Dexec.args="--project=$DEVSHELL_PROJECT_ID --stagingLocation=gs://my-oyster-test-bucket/staging/ --output=gs://my-oyster-test-bucket/output   --runner=DataflowRunner"

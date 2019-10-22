@@ -53,7 +53,7 @@ public class App {
 						delayQueue.addAll(messages);
 						delayQueueCycle++;
 					} else { //sleep
-						Thread.sleep(r.nextInt(1000));
+						Thread.sleep(r.nextInt(100));
 					}
 
 				} catch (InterruptedException e) {
